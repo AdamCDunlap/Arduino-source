@@ -24,6 +24,10 @@
 
 #include "wiring_private.h"
 
+#ifdef __cplusplus
+#include "HardwareSerial.h" // For setting up stdout
+#endif
+
 // the prescaler is set so that timer0 ticks every 64 clock cycles, and the
 // the overflow handler is called every 256 ticks.
 #define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
@@ -186,8 +190,22 @@ void delayMicroseconds(unsigned int us)
 	);
 }
 
+#ifdef __cplusplus
+
+int serial_putchar(char c, FILE* f) {
+    if (c == '\n') serial_putchar('\r', f);
+    return Serial.write(c) == 1? 0 : 1;
+}
+
+FILE serial_stdout;
+#endif
+
 void init()
 {
+    #ifdef __cplusplus
+    fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
+    stdout = &serial_stdout;
+    #endif
 	// this needs to be called before setup() or some functions won't
 	// work there
 	sei();
