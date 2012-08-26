@@ -23,10 +23,7 @@
 */
 
 #include "wiring_private.h"
-
-#ifdef __cplusplus
 #include "HardwareSerial.h" // For setting up stdout
-#endif
 
 // the prescaler is set so that timer0 ticks every 64 clock cycles, and the
 // the overflow handler is called every 256 ticks.
@@ -190,26 +187,24 @@ void delayMicroseconds(unsigned int us)
 	);
 }
 
-#ifdef __cplusplus
-
+// Function that printf and related will use to print
 int serial_putchar(char c, FILE* f) {
     if (c == '\n') serial_putchar('\r', f);
     return Serial.write(c) == 1? 0 : 1;
 }
 
 FILE serial_stdout;
-#endif
 
 void init()
 {
-    #ifdef __cplusplus
-    fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
-    stdout = &serial_stdout;
-    #endif
 	// this needs to be called before setup() or some functions won't
 	// work there
 	sei();
 	
+    // Set up stdout
+    fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
+    stdout = &serial_stdout;
+
 	// on the ATmega168, timer 0 is also used for fast hardware pwm
 	// (using phase-correct PWM would mean that timer 0 overflowed half as often
 	// resulting in different millis() behavior on the ATmega8 and ATmega168)
