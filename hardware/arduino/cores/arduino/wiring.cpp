@@ -192,8 +192,14 @@ int serial_putchar(char c, FILE* f) {
     if (c == '\n') serial_putchar('\r', f);
     return Serial.write(c) == 1? 0 : 1;
 }
+// Function that scanf and related will use to read
+int serial_getchar(FILE*) {
+    // Wait until character is avilable
+    while (Serial.available() <= 0);
+    return Serial.read();
+}
 
-FILE serial_stdout;
+FILE serial_stdinout;
 
 void init()
 {
@@ -201,9 +207,11 @@ void init()
 	// work there
 	sei();
 	
-    // Set up stdout
-    fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
-    stdout = &serial_stdout;
+    // Set up stdout and stdin
+    fdev_setup_stream(&serial_stdinout, serial_putchar, serial_getchar, _FDEV_SETUP_RW);
+    stdout = &serial_stdinout;
+    stdin  = &serial_stdinout;
+    stderr = &serial_stdinout;
 
 	// on the ATmega168, timer 0 is also used for fast hardware pwm
 	// (using phase-correct PWM would mean that timer 0 overflowed half as often
